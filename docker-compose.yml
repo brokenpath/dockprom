@@ -9,7 +9,6 @@ volumes:
     grafana_data: {}
 
 services:
-
   prometheus:
     image: prom/prometheus:v2.26.0
     container_name: prometheus
@@ -26,22 +25,8 @@ services:
     restart: unless-stopped
     expose:
       - 9090
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  alertmanager:
-    image: prom/alertmanager:v0.21.0
-    container_name: alertmanager
-    volumes:
-      - ./alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-    restart: unless-stopped
-    expose:
-      - 9093
+    ports:
+      - 9090:9090
     networks:
       - monitor-net
     labels:
@@ -67,23 +52,6 @@ services:
     labels:
       org.label-schema.group: "monitoring"
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.39.0
-    container_name: cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
-      #- /cgroup:/cgroup:ro #doesn't work on MacOS only for Linux
-    restart: unless-stopped
-    expose:
-      - 8080
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
   grafana:
     image: grafana/grafana:7.5.5
     container_name: grafana
@@ -92,43 +60,14 @@ services:
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     environment:
-      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=putavaluehere
       - GF_USERS_ALLOW_SIGN_UP=false
     restart: unless-stopped
+    ports:
+      - 3000:3000
     expose:
       - 3000
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  pushgateway:
-    image: prom/pushgateway:v1.4.0
-    container_name: pushgateway
-    restart: unless-stopped
-    expose:
-      - 9091
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  caddy:
-    image: caddy:2.3.0
-    container_name: caddy
-    ports:
-      - "3000:3000"
-      - "9090:9090"
-      - "9093:9093"
-      - "9091:9091"
-    volumes:
-      - ./caddy:/etc/caddy
-    environment:
-      - ADMIN_USER=${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-JDJhJDE0JE91S1FrN0Z0VEsyWmhrQVpON1VzdHVLSDkyWHdsN0xNbEZYdnNIZm1pb2d1blg4Y09mL0ZP}
-    restart: unless-stopped
     networks:
       - monitor-net
     labels:
