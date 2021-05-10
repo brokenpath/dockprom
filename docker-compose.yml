@@ -7,6 +7,7 @@ networks:
 volumes:
     prometheus_data: {}
     grafana_data: {}
+    loki_data: {}
 
 services:
   prometheus:
@@ -23,12 +24,7 @@ services:
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
     restart: unless-stopped
-    expose:
-      - 9090
-    ports:
-      - 9090:9090
-    networks:
-      - monitor-net
+    network_mode: host
     labels:
       org.label-schema.group: "monitoring"
 
@@ -47,6 +43,22 @@ services:
     restart: unless-stopped
     expose:
       - 9100
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  loki:
+    image: grafana/loki:2.1.0
+    container_name: loki
+    volumes : 
+      - ./loki:/etc/loki
+      - loki_data:/loki
+    command:
+      - '--config.file=/etc/loki/config.yml'
+    restart: unless-stopped
+    ports: 
+      - 3100:3100
     networks:
       - monitor-net
     labels:

@@ -16,6 +16,8 @@ services:
       - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
     restart: unless-stopped
     network_mode: host
+    expose: 
+      - 9100
     labels:
       org.label-schema.group: "monitoring"
 
